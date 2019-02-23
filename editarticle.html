@@ -1,0 +1,85 @@
+<div>
+  Fiddle <a href="https://jsfiddle.net/lexmail/sjwxuy6c/1/?utm_source=website&utm_medium=embed&utm_campaign=sjwxuy6c">here</a>
+</div>
+
+<html>
+  <head>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script> 
+     <meta charset="UTF-8"> 
+  </head>
+  <body>
+ 
+<button class="copy">Copy HTML</button>
+<div contenteditable style="margin-top: 16px">
+    <span>Paste here...</span>
+</div>
+  </body>
+
+  <script>
+ $(document).ready(function(){
+   
+   $('.copy').click(function() {
+     console.log($('[contenteditable]')[0].innerHTML)
+     copyToClipboard($('[contenteditable]')[0].innerHTML)
+
+   })
+    $('[contenteditable]').on('paste',function(e) {
+        
+        e.preventDefault();
+        
+        var text = (e.originalEvent || e).clipboardData.getData('text/html') || prompt('Paste something..');
+        var decode = $('<div />').html(text);
+      $(this).html(decode)
+return
+        // Add rendered html to DOM
+        $('#output').append(decode);
+
+        // text = encodeURI(text)
+        // var $result = $('<div></div>').append($(text));
+        $(this).html(text);
+        
+        // replace all styles except bold and italic
+        $.each($(this).find("*"), function(idx, val) {
+            var $item = $(val);
+            if ($item.length > 0){
+               var saveStyle = {
+                    'font-weight': $item.css('font-weight'),
+                    'font-style': $item.css('font-style')
+                };
+                $item.removeAttr('style').removeClass()
+                   .css(saveStyle); 
+                
+                $item.replaceWith(function(){
+                    return $("<span />", {html: $(this).html()});
+                });
+            }
+        });
+        
+        // remove unnecesary tags (if paste from word)
+        $(this).children('style').remove();
+        $(this).children('meta').remove()
+        $(this).children('link').remove();
+        
+    });
+    const copyToClipboard = str => {
+  const el = document.createElement('textarea');  // Create a <textarea> element
+  el.value = str;                                 // Set its value to the string that you want copied
+  el.setAttribute('readonly', '');                // Make it readonly to be tamper-proof
+  el.style.position = 'absolute';                 
+  el.style.left = '-9999px';                      // Move outside the screen to make it invisible
+  document.body.appendChild(el);                  // Append the <textarea> element to the HTML document
+  const selected =            
+    document.getSelection().rangeCount > 0        // Check if there is any content selected previously
+      ? document.getSelection().getRangeAt(0)     // Store selection if found
+      : false;                                    // Mark as false to know no selection existed before
+  el.select();                                    // Select the <textarea> content
+  document.execCommand('copy');                   // Copy - only works as a result of a user action (e.g. click events)
+  document.body.removeChild(el);                  // Remove the <textarea> element
+  if (selected) {                                 // If a selection existed before copying
+    document.getSelection().removeAllRanges();    // Unselect everything on the HTML document
+    document.getSelection().addRange(selected);   // Restore the original selection
+  }
+};
+}); 
+  </script>
+</html>

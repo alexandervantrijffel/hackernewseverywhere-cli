@@ -10,12 +10,14 @@ import (
 
 	texttospeech "cloud.google.com/go/texttospeech/apiv1"
 	"github.com/alexandervantrijffel/goutil/errorcheck"
+	"github.com/alexandervantrijffel/goutil/logging"
 	"github.com/alexandervantrijffel/hackernewseverywhere-cli/pkg/mergemp3"
 	"github.com/alexandervantrijffel/hackernewseverywhere-cli/pkg/ssmltext"
 	texttospeechpb "google.golang.org/genproto/googleapis/cloud/texttospeech/v1"
 )
 
 func main() {
+	logging.InitWith("hackernewseverywhere-cli", false)
 	ctx := context.Background()
 	client, err := texttospeech.NewClient(ctx)
 	if err != nil {
