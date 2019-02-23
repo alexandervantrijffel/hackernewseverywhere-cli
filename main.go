@@ -6,27 +6,49 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strconv"
 
 	texttospeech "cloud.google.com/go/texttospeech/apiv1"
+	"github.com/alexandervantrijffel/goutil/errorcheck"
+	"github.com/alexandervantrijffel/hackernewseverywhere-cli/pkg/mergemp3"
+	"github.com/alexandervantrijffel/hackernewseverywhere-cli/pkg/ssmltext"
 	texttospeechpb "google.golang.org/genproto/googleapis/cloud/texttospeech/v1"
 )
 
 func main() {
-	// Instantiates a client.
 	ctx := context.Background()
-
 	client, err := texttospeech.NewClient(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	content, _ := ioutil.ReadAll(os.Stdin)
+	if len(content) == 0 {
+		log.Fatal("No content! Please pipe content to me")
+	}
+	chunks, err := ssmltext.MakeChunks(string(content), 5000)
+	errorcheck.CheckLogFatal(err, "No content to synthesize, please pipe text to me")
+	if len(chunks) == 1 {
+		SynthesizeSsmlToFile(client, ctx, chunks[0], "output.mp3")
+		return
+	}
+	var sourceFiles []string
+	for i, c := range chunks {
+		src := strconv.Itoa(i) + ".mp3"
+		SynthesizeSsmlToFile(client, ctx, c, src)
+		sourceFiles = append(sourceFiles, src)
+	}
+	mergemp3.Merge("output.mp3", sourceFiles, true, false)
+	for _, s := range sourceFiles {
+		os.Remove(s)
+	}
+}
 
+func SynthesizeSsmlToFile(client *texttospeech.Client, ctx context.Context, ssml, destinationFile string) {
 	// Perform the text-to-speech request on the text input with the selected
 	// voice parameters and audio file type.
 	req := texttospeechpb.SynthesizeSpeechRequest{
 		Input: &texttospeechpb.SynthesisInput{
-			InputSource: &texttospeechpb.SynthesisInput_Ssml{Ssml: string(content)},
+			InputSource: &texttospeechpb.SynthesisInput_Ssml{Ssml: ssml},
 		},
 
 		// Set the text input to be synthesized.
@@ -52,11 +74,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// The resp's AudioContent is binary.
-	filename := "output.mp3"
-	err = ioutil.WriteFile(filename, resp.AudioContent, 0644)
+	err = ioutil.WriteFile(destinationFile, resp.AudioContent, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Audio content written to file: %v\n", filename)
+	fmt.Printf("Audio content written to file: %v\n", destinationFile)
 }
