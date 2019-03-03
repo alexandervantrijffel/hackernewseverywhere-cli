@@ -69,7 +69,7 @@ func SynthesizeSsmlToFile(client *texttospeech.Client, ctx context.Context, ssml
 		},
 		AudioConfig: &texttospeechpb.AudioConfig{
 			//AudioEncoding: texttospeechpb.AudioEncoding_MP3,
-			//Pitch: -7.2,
+			Pitch: -6.00,
 			SpeakingRate: 1.00,
 			AudioEncoding:  texttospeechpb.AudioEncoding_LINEAR16,
 		},
